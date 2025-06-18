@@ -1,79 +1,166 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <title>三枚铜钱摇卦模拟</title>
+  <meta charset="UTF-8" />
+  <title>易经摇卦模拟器</title>
   <style>
     body {
-      font-family: "楷体", serif;
-      background: #f9f3e7;
-      color: #333;
+      font-family: "宋体", serif;
+      background: #fefaf0;
       text-align: center;
       padding: 20px;
+      color: #333;
     }
     .yao {
       font-size: 26px;
       margin: 6px;
     }
-    .yang {
-      color: #c1440e;
-    }
-    .yin {
-      color: #2a2a2a;
-    }
+    .yang { color: #b54800; }
+    .yin { color: #000; }
     button {
       font-size: 18px;
       padding: 10px 20px;
-      margin-top: 20px;
-      background: #fffbf2;
-      border: 1px solid #aaa;
+      margin: 20px auto;
       cursor: pointer;
+      background-color: #fff7e0;
+      border: 1px solid #ccc;
+    }
+    .svg-box {
+      display: inline-block;
+      margin: 10px;
     }
   </style>
 </head>
 <body>
-  <h1>三枚铜钱摇卦模拟</h1>
+  <h1>易经三枚铜钱摇卦模拟器</h1>
+  <button onclick="shakeGua()">🔮 摇卦</button>
   <div id="gua"></div>
-  <button onclick="shakeGua()">开始摇卦</button>
 
   <script>
-    // 模拟一次抛掷三枚铜钱，返回得到的爻值（6, 7, 8, or 9）
+    const baguaNames = ["坤", "艮", "坎", "巽", "震", "离", "兑", "乾"];
+    const gua64Names = [
+      "坤为地","地山谦","地水师","地风升","地雷复","地火明夷","地泽临","地天泰",
+      "山地剥","艮为山","山水蒙","山风蛊","山雷颐","山火贲","山泽损","山天大畜",
+      "水地比","水山蹇","坎为水","水风井","水雷屯","水火既济","水泽节","水天需",
+      "风地观","风山渐","风水涣","巽为风","风雷益","风火家人","风泽中孚","风天小畜",
+      "雷地豫","雷山小过","雷水解","雷风恒","震为雷","雷火丰","雷泽归妹","雷天大壮",
+      "火地晋","火山旅","火水未济","火风鼎","火雷噬嗑","离为火","火泽睽","火天大有",
+      "泽地萃","泽山咸","泽水困","泽风大过","泽雷随","泽火革","兑为泽","泽天夬",
+      "天地否","天山遁","天水讼","天风姤","天雷无妄","天火同人","天泽履","乾为天"
+    ];
+
+    const guaExplanations = {
+      "乾为天": {
+        guaci: "元，亨，利，贞。",
+        yaoci: [
+          "初九：潜龙，勿用。",
+          "九二：见龙在田，利见大人。",
+          "九三：君子终日乾乾，夕惕若，厉无咎。",
+          "九四：或跃在渊，无咎。",
+          "九五：飞龙在天，利见大人。",
+          "上九：亢龙有悔。"
+        ]
+      },
+      "坤为地": {
+        guaci: "元，亨，利，牝马之贞。",
+        yaoci: [
+          "初六：履霜，坚冰至。",
+          "六二：直方大，不习无不利。",
+          "六三：含章可贞。或从王事，无成有终。",
+          "六四：括囊，无咎无誉。",
+          "六五：黄裳，元吉。",
+          "上六：龙战于野，其血玄黄。"
+        ]
+      }
+    };
+
     function tossThreeCoins() {
       let heads = 0;
       for (let i = 0; i < 3; i++) {
-        if (Math.random() < 0.5) heads++; // 正面
+        if (Math.random() < 0.5) heads++;
       }
-      if (heads === 3) return 9; // 老阳 ⚊（变爻）
-      if (heads === 2) return 7; // 少阳 ⚊
-      if (heads === 1) return 8; // 少阴 ⚋
-      return 6; // 老阴 ⚋（变爻）
+      if (heads === 3) return 9;
+      if (heads === 2) return 7;
+      if (heads === 1) return 8;
+      return 6;
     }
 
-    // 将爻值转换为符号显示
     function yaoSymbol(val) {
       const isYang = (val === 7 || val === 9);
       const isOld = (val === 6 || val === 9);
       const symbol = isYang ? "⚊⚊⚊" : "⚋⚋⚋";
-      const extra = isOld ? "（变爻）" : "";
-      return `<span class="${isYang ? 'yang' : 'yin'}">${symbol}${extra}</span>`;
+      return `<span class="${isYang ? 'yang' : 'yin'}">${symbol}${isOld ? "（变爻）" : ""}</span>`;
+    }
+
+    function yaoToBinary(val) {
+      return (val === 7 || val === 9) ? 1 : 0;
+    }
+
+    function getGuaName(yaoList) {
+      let lower = yaoList.slice(3).map(yaoToBinary).join('');
+      let upper = yaoList.slice(0, 3).map(yaoToBinary).join('');
+      let lowerIndex = parseInt(lower, 2);
+      let upperIndex = parseInt(upper, 2);
+      let guaIndex = upperIndex * 8 + lowerIndex;
+      return {
+        name: gua64Names[guaIndex],
+        upper: baguaNames[upperIndex],
+        lower: baguaNames[lowerIndex]
+      };
+    }
+
+    function getTransformedGua(yaoList) {
+      return yaoList.map(val => (val === 6 ? 7 : val === 9 ? 8 : val));
+    }
+
+    function drawBaguaSVG(threeYao) {
+      let svg = `<svg width="60" height="100">`;
+      for (let i = 0; i < 3; i++) {
+        const y = 20 + i * 25;
+        const val = threeYao[i];
+        const isYang = (val === 7 || val === 9);
+        if (isYang) {
+          svg += `<line x1="10" y1="${y}" x2="50" y2="${y}" stroke="black" stroke-width="6"/>`;
+        } else {
+          svg += `<line x1="10" y1="${y}" x2="25" y2="${y}" stroke="black" stroke-width="6"/>
+                  <line x1="35" y1="${y}" x2="50" y2="${y}" stroke="black" stroke-width="6"/>`;
+        }
+      }
+      svg += `</svg>`;
+      return svg;
     }
 
     function shakeGua() {
       const guaDiv = document.getElementById("gua");
-      guaDiv.innerHTML = ""; // 清空上一次结果
+      guaDiv.innerHTML = "";
       const yaoList = [];
 
-      // 从下往上摇6次
-      for (let i = 0; i < 6; i++) {
-        const yao = tossThreeCoins();
-        yaoList.unshift(yao); // 从下爻往上推，结果要逆序
-      }
+      for (let i = 0; i < 6; i++) yaoList.unshift(tossThreeCoins());
 
-      // 显示结果
-      yaoList.forEach((val, index) => {
-        const yaoText = yaoSymbol(val);
-        guaDiv.innerHTML += `<div class="yao">第 ${6 - index} 爻：${yaoText}</div>`;
+      yaoList.forEach((val, i) => {
+        guaDiv.innerHTML += `<div class="yao">第 ${6 - i} 爻：${yaoSymbol(val)}</div>`;
       });
+
+      const guaInfo = getGuaName(yaoList);
+      guaDiv.innerHTML += `<hr><div><strong>本卦：</strong>${guaInfo.name}（上卦：${guaInfo.upper}，下卦：${guaInfo.lower}）</div>`;
+      guaDiv.innerHTML += `<div class="svg-box">${drawBaguaSVG(yaoList.slice(0,3))}<br>${guaInfo.upper}</div>`;
+      guaDiv.innerHTML += `<div class="svg-box">${drawBaguaSVG(yaoList.slice(3))}<br>${guaInfo.lower}</div>`;
+
+      const zhiList = getTransformedGua(yaoList);
+      const zhiInfo = getGuaName(zhiList);
+      guaDiv.innerHTML += `<hr><div><strong>之卦：</strong>${zhiInfo.name}（上卦：${zhiInfo.upper}，下卦：${zhiInfo.lower}）</div>`;
+      guaDiv.innerHTML += `<div class="svg-box">${drawBaguaSVG(zhiList.slice(0,3))}<br>${zhiInfo.upper}</div>`;
+      guaDiv.innerHTML += `<div class="svg-box">${drawBaguaSVG(zhiList.slice(3))}<br>${zhiInfo.lower}</div>`;
+
+      if (guaExplanations[guaInfo.name]) {
+        const { guaci, yaoci } = guaExplanations[guaInfo.name];
+        guaDiv.innerHTML += `<hr><div><strong>卦辞：</strong>${guaci}</div><br>`;
+        yaoList.forEach((val, idx) => {
+          guaDiv.innerHTML += `<div>第${idx + 1}爻辞：${yaoci[idx]}</div>`;
+        });
+      } else {
+        guaDiv.innerHTML += `<div>（未找到此卦的详细解释）</div>`;
+      }
     }
   </script>
 </body>
