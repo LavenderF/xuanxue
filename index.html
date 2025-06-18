@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>三枚铜钱摇卦模拟</title>
+  <style>
+    body {
+      font-family: "楷体", serif;
+      background: #f9f3e7;
+      color: #333;
+      text-align: center;
+      padding: 20px;
+    }
+    .yao {
+      font-size: 26px;
+      margin: 6px;
+    }
+    .yang {
+      color: #c1440e;
+    }
+    .yin {
+      color: #2a2a2a;
+    }
+    button {
+      font-size: 18px;
+      padding: 10px 20px;
+      margin-top: 20px;
+      background: #fffbf2;
+      border: 1px solid #aaa;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>三枚铜钱摇卦模拟</h1>
+  <div id="gua"></div>
+  <button onclick="shakeGua()">开始摇卦</button>
+
+  <script>
+    // 模拟一次抛掷三枚铜钱，返回得到的爻值（6, 7, 8, or 9）
+    function tossThreeCoins() {
+      let heads = 0;
+      for (let i = 0; i < 3; i++) {
+        if (Math.random() < 0.5) heads++; // 正面
+      }
+      if (heads === 3) return 9; // 老阳 ⚊（变爻）
+      if (heads === 2) return 7; // 少阳 ⚊
+      if (heads === 1) return 8; // 少阴 ⚋
+      return 6; // 老阴 ⚋（变爻）
+    }
+
+    // 将爻值转换为符号显示
+    function yaoSymbol(val) {
+      const isYang = (val === 7 || val === 9);
+      const isOld = (val === 6 || val === 9);
+      const symbol = isYang ? "⚊⚊⚊" : "⚋⚋⚋";
+      const extra = isOld ? "（变爻）" : "";
+      return `<span class="${isYang ? 'yang' : 'yin'}">${symbol}${extra}</span>`;
+    }
+
+    function shakeGua() {
+      const guaDiv = document.getElementById("gua");
+      guaDiv.innerHTML = ""; // 清空上一次结果
+      const yaoList = [];
+
+      // 从下往上摇6次
+      for (let i = 0; i < 6; i++) {
+        const yao = tossThreeCoins();
+        yaoList.unshift(yao); // 从下爻往上推，结果要逆序
+      }
+
+      // 显示结果
+      yaoList.forEach((val, index) => {
+        const yaoText = yaoSymbol(val);
+        guaDiv.innerHTML += `<div class="yao">第 ${6 - index} 爻：${yaoText}</div>`;
+      });
+    }
+  </script>
+</body>
+</html>
